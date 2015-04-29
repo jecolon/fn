@@ -92,6 +92,13 @@ func TestFixForShell(t *testing.T) {
 	if o != w {
 		t.Fatalf("wanted %s but got %s", w, o)
 	}
+
+	s = "    "
+	o = FixForShell(s)
+	w = "FN_NO_NAME"
+	if o != w {
+		t.Fatalf("wanted %q but got %q", w, o)
+	}
 }
 
 func BenchmarkFixForShell(b *testing.B) {
@@ -104,16 +111,23 @@ func BenchmarkFixForShell(b *testing.B) {
 func TestFixForURL(t *testing.T) {
 	s := "--  __\a\b\f\n\r\v\t  áéíóúñ test 123.45 _ () {} :; | *? <> \" '--.png-"
 	o := FixForURL(s)
-	w := "aeioun_test_123.45.png"
+	w := "aeioun-test-123.45.png"
 	if o != w {
 		t.Fatalf("wanted %s but got %s", w, o)
 	}
 
 	s = "--thí$ is (á réallý<bad>){file*/ñame}- .png "
 	o = FixForURL(s)
-	w = "thi_is_a_reallybadfilename.png"
+	w = "thi-is-a-reallybadfilename.png"
 	if o != w {
 		t.Fatalf("wanted %s but got %s", w, o)
+	}
+
+	s = "    "
+	o = FixForURL(s)
+	w = "FN-NO-NAME"
+	if o != w {
+		t.Fatalf("wanted %q but got %q", w, o)
 	}
 }
 

@@ -21,6 +21,10 @@ func FixForShell(source string) (result string) {
 	result = replaceSpaces(result, "_")
 	// Remove duplicate, leading, or trailing dash, underscore, or space
 	result = trim(result, "-_ ")
+	// Handle all invalid characters
+	if result == "" {
+		result = "FN_NO_NAME"
+	}
 	return
 }
 
@@ -29,10 +33,14 @@ func FixForShell(source string) (result string) {
 func FixForURL(source string) (result string) {
 	result = stripControl(source)
 	result = stripSpecial(result)
-	result = replaceSpaces(result, "_")
+	result = replaceSpaces(result, "-")
 	result = ud.Unidecode(result)
 	// Remove duplicate, leading, or trailing dash, underscore, or space
 	result = trim(result, "-_ ")
+	// Handle all invalid characters
+	if result == "" {
+		result = "FN-NO-NAME"
+	}
 	return
 }
 
