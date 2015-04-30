@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 
 	"github.com/jecolon/fn"
 	flag "github.com/ogier/pflag"
@@ -21,7 +22,7 @@ type config struct {
 
 var dir = flag.StringP("dir", "d", ".", "Directory to process. Default is current directory.")
 var mv = flag.BoolP("move", "m", false, "Move (rename) instead of copy files.")
-var out = flag.StringP("out", "o", ".", "Output directory for copies. Default is --dir flag's value.")
+var out = flag.StringP("out", "o", ".", "Output directory (relative to --dir) to save copies.")
 var report = flag.BoolP("report", "r", false, "Just report the filename changes that would occur.")
 
 func main() {
@@ -41,6 +42,8 @@ func process(conf *config) {
 	if conf.dir == "TEST" {
 		names = conf.input
 	} else {
+		// Prepare path
+		conf.dir = path.Clean(conf.dir)
 		// Open source dir
 		d, err := os.Open(conf.dir)
 		check(err)
@@ -66,7 +69,7 @@ func process(conf *config) {
 	if conf.report {
 		fmt.Printf("\nfn fix filenames report for %q directory:\n", conf.dir)
 		fmt.Printf("Move (rename):\t%t\n", conf.mv)
-		fmt.Printf("Output dir:\t%q\n\n", conf.dir+"/"+conf.out)
+		fmt.Printf("Output dir:\t%q\n\n", path.Join(conf.dir, conf.out))
 		for i, n := range names {
 			fmt.Printf("%q -> %q\n", n, conf.output[i])
 		}
@@ -97,14 +100,17 @@ func process(conf *config) {
 		var dst *os.File
 		// Output dir
 		if conf.mv {
+			// Move (rename) stays in source directory
 			dst, err = os.Create(conf.output[i])
 			check(err)
 		} else {
-			err = os.MkdirAll(conf.out, 0750)
+			// Copy uses --out directory (which could be same as source)
+			err = os.Mkdir(conf.out, 0750)
+			// If --out exists, carry on, stop on other errors
 			if err != nil && !os.IsExist(err) {
 				check(err)
 			}
-			dst, err = os.Create(conf.out + "/" + conf.output[i])
+			dst, err = os.Create(path.Join(conf.out, conf.output[i]))
 			check(err)
 		}
 
