@@ -83,6 +83,12 @@ func process(conf *config) {
 		if n == conf.output[i] {
 			continue
 		}
+		// Skip directories
+		si, err := os.Stat(n)
+		check(err)
+		if si.IsDir() {
+			continue
+		}
 		// Open files
 		src, err := os.Open(n)
 		check(err)
