@@ -137,3 +137,18 @@ func BenchmarkFixForURL(b *testing.B) {
 		FixForURL(s)
 	}
 }
+
+func TestTruncate(t *testing.T) {
+	s := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper portab."
+	o := truncate(s, MaxLenURL)
+	if !(len(o) >= MaxLenURL) {
+		t.Fatalf("wanted %d but got %d", MaxLenURL, len(o))
+	}
+}
+
+func BenchmarkTruncate(b *testing.B) {
+	s := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper portab."
+	for i := 0; i < b.N; i++ {
+		truncate(s, MaxLenURL)
+	}
+}
