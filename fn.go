@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	ud "github.com/fiam/gounidecode/unidecode"
 )
@@ -24,7 +25,7 @@ const (
 func FixForShell(source string) (result string) {
 	result = stripControl(source)
 	result = stripSpecial(result)
-	result = replaceSpaces(result, "_")
+	result = replaceSpaces(result, '_')
 	// Remove duplicate, leading, or trailing dash, underscore, or space
 	result = trim(result, "-_ ")
 	result = truncate(result, MaxLenShell)
@@ -40,7 +41,7 @@ func FixForShell(source string) (result string) {
 func FixForURL(source string) (result string) {
 	result = stripControl(source)
 	result = stripSpecial(result)
-	result = replaceSpaces(result, "-")
+	result = replaceSpaces(result, '-')
 	result = ud.Unidecode(result)
 	// Remove duplicate, leading, or trailing dash, underscore, or space
 	result = trim(result, "-_ ")
@@ -53,48 +54,59 @@ func FixForURL(source string) (result string) {
 }
 
 func stripControl(source string) (result string) {
+	var runes []rune
 	for _, r := range source {
 		if unicode.IsControl(r) {
 			continue
 		}
-		result += string(r)
+		runes = append(runes, r)
 	}
+	result = string(runes)
 	return
 }
 
 func stripSpecial(source string) (result string) {
+	var runes []rune
 	for _, r := range source {
-		// rune to string
-		s := string(r)
-		if strings.Contains(Special, s) {
+		if strings.ContainsRune(Special, r) {
 			continue
 		}
-		result += string(s)
+		runes = append(runes, r)
 	}
+	result = string(runes)
 	return
 }
 
-func replaceSpaces(source, replacement string) (result string) {
+func replaceSpaces(source string, replacement rune) (result string) {
+	var runes []rune
 	for _, r := range source {
 		if r == ' ' {
-			result += replacement
+			runes = append(runes, replacement)
 			continue
 		}
-		result += string(r)
+		runes = append(runes, r)
 	}
+	result = string(runes)
 	return
 }
 
 func trim(source, set string) (result string) {
+	// Setup
 	parts := strings.Split(source, ".")
+	setRegExes := make(map[string]*regexp.Regexp)
+	for _, r := range set {
+		character := string(r)
+		setRegExes[character] = regexp.MustCompile("[" + character + "]{2,}")
+	}
+	beginEndRegEx := regexp.MustCompile("(^[" + set + "]|[" + set + "]$)")
+
+	// Process
 	for i := range parts {
-		for _, r := range set {
-			character := string(r)
-			parts[i] = regexp.MustCompile("["+character+"]{2,}").ReplaceAllString(parts[i], character)
+		for c, re := range setRegExes {
+			parts[i] = re.ReplaceAllString(parts[i], c)
 		}
-		re := regexp.MustCompile("(^[" + set + "]|[" + set + "]$)")
-		for re.MatchString(parts[i]) {
-			parts[i] = re.ReplaceAllString(parts[i], "")
+		for beginEndRegEx.MatchString(parts[i]) {
+			parts[i] = beginEndRegEx.ReplaceAllString(parts[i], "")
 		}
 	}
 	result = strings.Join(parts, ".")
@@ -103,8 +115,17 @@ func trim(source, set string) (result string) {
 
 func truncate(source string, length int) (result string) {
 	result = source
-	if len(source) > length {
-		result = source[:length+1]
+	if utf8.RuneCountInString(source) > length {
+		var runes []rune
+		i := 0
+		for _, r := range source {
+			if i > length {
+				break
+			}
+			runes = append(runes, r)
+			i++
+		}
+		result = string(runes)
 	}
 	return
 }

@@ -1,6 +1,9 @@
 package fn
 
-import "testing"
+import (
+	"testing"
+	"unicode/utf8"
+)
 
 func TestStripControl(t *testing.T) {
 	s := "\a\b\f\n\r\v\t test 123.45 _ () {} :; | *? <> \" '"
@@ -36,7 +39,7 @@ func BenchmarkStripSpecial(b *testing.B) {
 
 func TestReplaceSpaces(t *testing.T) {
 	s := "\a\b\f\n\r\v\t test 123.45 _ () {} :; | *? <> \" '"
-	r := "_"
+	r := '_'
 	o := replaceSpaces(s, r)
 	w := "\a\b\f\n\r\v\t_test_123.45___()_{}_:;_|_*?_<>_\"_'"
 	if o != w {
@@ -46,7 +49,7 @@ func TestReplaceSpaces(t *testing.T) {
 
 func BenchmarkReplaceSpaces(b *testing.B) {
 	s := "\a\b\f\n\r\v\t test 123.45 _ () {} :; | *? <> \" '"
-	r := "_"
+	r := '_'
 	for i := 0; i < b.N; i++ {
 		replaceSpaces(s, r)
 	}
@@ -141,8 +144,9 @@ func BenchmarkFixForURL(b *testing.B) {
 func TestTruncate(t *testing.T) {
 	s := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper portab."
 	o := truncate(s, MaxLenURL)
-	if !(len(o) >= MaxLenURL) {
-		t.Fatalf("wanted %d but got %d", MaxLenURL, len(o))
+	ol := utf8.RuneCountInString(o)
+	if !(ol >= MaxLenURL) {
+		t.Fatalf("wanted %d but got %d", MaxLenURL, ol)
 	}
 }
 
