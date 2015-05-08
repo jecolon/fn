@@ -10,7 +10,7 @@ func TestFn(t *testing.T) {
 		input: []string{"    ", " _fíle$-.txt "},
 	}
 	process(conf)
-	w := []string{"FN_NO_NAME", "fíle.txt"}
+	w := []string{"FN_NO_NAME_0", "fíle.txt"}
 	for i, n := range conf.output {
 		if n != w[i] {
 			t.Fatalf("wanted %v but got %v", w, conf.output)

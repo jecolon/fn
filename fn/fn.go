@@ -75,6 +75,9 @@ func process(conf *config) {
 	conf.output = make([]string, len(conf.input))
 	for i := range conf.input {
 		conf.output[i] = fn.FixForShell(conf.input[i])
+		if conf.output[i] == "FN_NO_NAME" {
+			conf.output[i] = fmt.Sprintf("%s_%d", conf.output[i], i)
+		}
 	}
 
 	// Testing ends here... for now
